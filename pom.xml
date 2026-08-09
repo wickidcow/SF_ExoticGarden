@@ -7,19 +7,22 @@
 
     <groupId>io.github.wickidcow</groupId>
     <artifactId>ExoticGardenLegacy</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
     <name>ExoticGarden-Legacy</name>
-    <description>Legacy-maintained ExoticGarden for modern Paper and Slimefun.</description>
-    <url>https://github.com/wickidcow/ExoticGardenLegacy</url>
+    <description>Legacy-maintained ExoticGarden for modern Paper and Slimefun-compatible runtimes.</description>
+    <url>https://github.com/wickidcow/SF_ExoticGarden</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>25</maven.compiler.release>
 
-        <!-- Paper 26.2 baseline used by ExoticGarden Legacy 1.0 -->
+        <!-- Albion/Legacy production baseline. Keep this exact while Paper 26.2
+             remains the primary runtime target. -->
         <paper.version>26.2.build.111-stable</paper.version>
 
-        <!-- Stable public Slimefun API baseline. Runtime target is Slimefun Legacy. -->
+        <!-- Deliberately compile against the public Slimefun API baseline rather
+             than a Legacy/United/Gugu implementation artifact. This keeps one
+             JAR usable across API-compatible forks. -->
         <slimefun.version>RC-37</slimefun.version>
 
         <bstats.version>3.2.1</bstats.version>
@@ -38,11 +41,10 @@
     </repositories>
 
     <build>
-        <finalName>ExoticGarden-Legacy-1.0</finalName>
+        <finalName>ExoticGarden-Legacy-1.1</finalName>
         <defaultGoal>clean package</defaultGoal>
 
         <resources>
-            <!-- Filter plugin.yml so ${project.version} becomes 1.0 -->
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
@@ -52,7 +54,7 @@
                 </includes>
             </resource>
 
-            <!-- Schematics are binary and must never be filtered. -->
+            <!-- Binary schematic resources must never be Maven-filtered. -->
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>false</filtering>
@@ -79,6 +81,10 @@
                     <release>25</release>
                     <encoding>UTF-8</encoding>
                     <showWarnings>true</showWarnings>
+                    <compilerArgs>
+                        <arg>-Xlint:deprecation</arg>
+                        <arg>-Xlint:unchecked</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 
@@ -98,7 +104,8 @@
                     <createDependencyReducedPom>false</createDependencyReducedPom>
                     <minimizeJar>false</minimizeJar>
 
-                    <!-- bStats is the only library intentionally bundled. -->
+                    <!-- Slimefun and Paper are supplied by the server. Only bStats
+                         is intentionally bundled into this addon. -->
                     <artifactSet>
                         <includes>
                             <include>org.bstats:bstats-base</include>
@@ -142,8 +149,8 @@
             <version>${slimefun.version}</version>
             <scope>provided</scope>
             <exclusions>
-                <!-- Paper is our compile API. Do not allow an older Bukkit API
-                     to win dependency resolution through Slimefun. -->
+                <!-- Paper is the compile server API. Do not let an older Spigot
+                     API win dependency resolution through Slimefun. -->
                 <exclusion>
                     <groupId>org.spigotmc</groupId>
                     <artifactId>spigot-api</artifactId>

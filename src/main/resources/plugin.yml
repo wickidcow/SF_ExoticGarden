@@ -3,12 +3,13 @@ version: ${project.version}
 author: TheBusyBiscuit
 contributors:
   - wickidcow
-description: ExoticGarden Legacy - maintained for modern Slimefun and Paper 26.2
-website: https://github.com/wickidcow/ExoticGardenLegacy
+description: ExoticGarden Legacy - classic ExoticGarden maintained for modern Paper and Slimefun-compatible runtimes
+website: https://github.com/wickidcow/SF_ExoticGarden
 api-version: '26.2'
 main: io.github.thebusybiscuit.exoticgarden.ExoticGarden
 
-# Keep Slimefun as the only hard dependency.
-# GuizhanLibPlugin and GuguSlimefunLib are intentionally NOT required.
+# Compatibility rule:
+# Slimefun is the ONLY hard plugin dependency.
+# GuizhanLibPlugin and GuguSlimefunLib must remain optional/non-required.
 depend:
   - Slimefun

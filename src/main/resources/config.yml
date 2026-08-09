@@ -1,7 +1,10 @@
-# ExoticGarden Legacy
+# ExoticGarden Legacy 1.1
 #
-# Existing worlds and Slimefun IDs are intentionally preserved.
-# This fork does not use an automatic self-updater.
+# Compatibility and data-preservation notes:
+# - The Bukkit plugin name remains "ExoticGarden".
+# - Existing Slimefun IDs, recipes and stored block data are not renamed.
+# - GuizhanLibPlugin and GuguSlimefunLib are not required.
+# - Natural generation remains enabled by default to preserve classic behavior.
 
 grass-drops: []
 
@@ -12,3 +15,17 @@ world-blacklist:
 chances:
   TREE: 22
   BUSH: 16
+
+options:
+  # Safe backport of the newer ExoticGarden generation toggle.
+  # Existing installations without this key also default to true in code.
+  auto-generate-plants: true
+
+compatibility:
+  # Log the detected Slimefun runtime/version at startup without binding to
+  # fork-specific implementation classes.
+  log-runtime: true
+
+  # Slimefun custom blocks should not be physically moved by vanilla pistons;
+  # moving them can separate a block from its Slimefun storage location.
+  protect-piston-movement: true
