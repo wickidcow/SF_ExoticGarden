@@ -33,8 +33,22 @@ jobs:
           java-version: '25'
           cache: maven
 
-      - name: Normalize inherited source for Paper 26.2
+      - name: Normalize complete source tree for Paper 26.2
         run: python3 scripts/prepare_26_2_sources.py
+
+      - name: Verify known removed APIs are gone
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if grep -RInE \
+            '\bMaterial\.GRASS\b|Particle\.VILLAGER_ANGRY|Effect\.STEP_SOUND' \
+            src/main/java; then
+            echo "Known Paper 26.2-incompatible API remained after normalization."
+            exit 1
+          fi
+
+          echo "Paper 26.2 compatibility scan passed."
 
       - name: Build ExoticGarden Legacy
         run: mvn -B -ntp clean package
@@ -54,7 +68,7 @@ jobs:
           echo "SHA-256:"
           sha256sum "$JAR"
 
-          echo "Checking plugin metadata..."
+          echo "Embedded plugin metadata:"
           unzip -p "$JAR" plugin.yml
 
       - name: Upload ExoticGarden-Legacy-1.0.jar
