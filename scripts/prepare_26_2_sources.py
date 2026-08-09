@@ -2,22 +2,28 @@
 """
 ExoticGarden Legacy 1.0 - Paper 26.2 source normalizer.
 
-This script is intentionally small, deterministic and idempotent.
-It updates only known legacy API usages inherited from the original
-ExoticGarden source tree. It does NOT rename Slimefun item IDs,
-plugin identity, recipes, plants, foods, or stored block data.
+This script is deterministic and idempotent. It updates inherited Bukkit/Paper
+API usages across the COMPLETE Java source tree before compilation.
 
-It can be run locally before committing the source changes, and the
-GitHub Actions workflow also runs it before compiling as a safety net.
+Foundation policy:
+- Preserve the Bukkit plugin identity "ExoticGarden".
+- Preserve every Slimefun item ID, recipe, plant, tree, food and data key.
+- Do not add GuizhanLibPlugin or GuguSlimefunLib.
+- Remove the abandoned upstream auto-updater.
+- Modernize only known API compatibility points.
+
+The GitHub Actions workflow runs this script before Maven compilation.
 """
+
+from __future__ import annotations
 
 from pathlib import Path
 import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-MAIN = ROOT / "src/main/java/io/github/thebusybiscuit/exoticgarden/ExoticGarden.java"
-PLANTS = ROOT / "src/main/java/io/github/thebusybiscuit/exoticgarden/listeners/PlantsListener.java"
+JAVA_ROOT = ROOT / "src/main/java"
+MAIN = JAVA_ROOT / "io/github/thebusybiscuit/exoticgarden/ExoticGarden.java"
 
 
 def fail(message: str) -> None:
@@ -25,9 +31,18 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
+def java_files() -> list[Path]:
+    if not JAVA_ROOT.is_dir():
+        fail(f"Java source tree not found: {JAVA_ROOT.relative_to(ROOT)}")
+
+    files = sorted(JAVA_ROOT.rglob("*.java"))
+    if not files:
+        fail("No Java source files were found.")
+
+    return files
+
+
 def read(path: Path) -> str:
-    if not path.is_file():
-        fail(f"Required source file not found: {path.relative_to(ROOT)}")
     return path.read_text(encoding="utf-8")
 
 
@@ -35,147 +50,283 @@ def write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8", newline="\n")
 
 
-def replace_known(text: str, old: str, new: str, expected_old: int | None, label: str) -> str:
-    old_count = text.count(old)
-
-    if old_count == 0:
-        # Already modernized is valid.
-        if new in text:
-            print(f"[ExoticGarden Legacy] OK already modern: {label}")
-            return text
-        fail(f"Could not find legacy or modern form for: {label}")
-
-    if expected_old is not None and old_count != expected_old:
-        fail(f"Unexpected occurrence count for {label}: expected {expected_old}, found {old_count}")
-
-    print(f"[ExoticGarden Legacy] Updating {label}: {old_count} occurrence(s)")
-    return text.replace(old, new)
+def relative(path: Path) -> str:
+    return path.relative_to(ROOT).as_posix()
 
 
-def modernize_main() -> None:
+def replace_all_java_literal(old: str, new: str, label: str) -> int:
+    changed = 0
+    occurrences = 0
+
+    for path in java_files():
+        text = read(path)
+        count = text.count(old)
+
+        if count:
+            text = text.replace(old, new)
+            write(path, text)
+            changed += 1
+            occurrences += count
+            print(
+                f"[ExoticGarden Legacy] {label}: "
+                f"{relative(path)} ({count} occurrence(s))"
+            )
+
+    if occurrences == 0:
+        print(f"[ExoticGarden Legacy] OK already modern: {label}")
+    else:
+        print(
+            f"[ExoticGarden Legacy] Updated {label}: "
+            f"{occurrences} occurrence(s) in {changed} file(s)"
+        )
+
+    return occurrences
+
+
+def replace_material_grass() -> int:
+    """
+    Material.GRASS represented the short/tall decorative grass material in the
+    inherited source. Paper 26.2 exposes SHORT_GRASS instead.
+
+    The word-boundary regex deliberately does NOT touch GRASS_BLOCK,
+    TALL_GRASS, LEGACY_GRASS, etc.
+    """
+    pattern = re.compile(r"\bMaterial\.GRASS\b")
+    changed = 0
+    occurrences = 0
+
+    for path in java_files():
+        text = read(path)
+        new_text, count = pattern.subn("Material.SHORT_GRASS", text)
+
+        if count:
+            write(path, new_text)
+            changed += 1
+            occurrences += count
+            print(
+                f"[ExoticGarden Legacy] Material.GRASS -> Material.SHORT_GRASS: "
+                f"{relative(path)} ({count} occurrence(s))"
+            )
+
+    if occurrences == 0:
+        print("[ExoticGarden Legacy] OK already modern: Material.GRASS")
+    else:
+        print(
+            f"[ExoticGarden Legacy] Updated Material.GRASS: "
+            f"{occurrences} occurrence(s) in {changed} file(s)"
+        )
+
+    return occurrences
+
+
+def replace_step_sound() -> int:
+    """
+    Paper 26.2 marks Effect.STEP_SOUND for removal and directs plugins to
+    Effect.DESTROY_BLOCK. DESTROY_BLOCK expects BlockData, not Material.
+
+    ExoticGarden's inherited calls pass direct Material enum constants, so
+    convert:
+        Effect.STEP_SOUND, Material.X
+    into:
+        Effect.DESTROY_BLOCK, Material.X.createBlockData()
+
+    Any STEP_SOUND form not matching this known-safe shape is left untouched
+    and caught by verification rather than being blindly rewritten.
+    """
+    pattern = re.compile(
+        r"Effect\.STEP_SOUND\s*,\s*Material\.([A-Z0-9_]+)"
+    )
+
+    changed = 0
+    occurrences = 0
+
+    for path in java_files():
+        text = read(path)
+
+        def replacement(match: re.Match[str]) -> str:
+            material = match.group(1)
+            return (
+                f"Effect.DESTROY_BLOCK, "
+                f"Material.{material}.createBlockData()"
+            )
+
+        new_text, count = pattern.subn(replacement, text)
+
+        if count:
+            write(path, new_text)
+            changed += 1
+            occurrences += count
+            print(
+                f"[ExoticGarden Legacy] STEP_SOUND -> DESTROY_BLOCK: "
+                f"{relative(path)} ({count} occurrence(s))"
+            )
+
+    if occurrences == 0:
+        print("[ExoticGarden Legacy] OK already modern: Effect.STEP_SOUND")
+    else:
+        print(
+            f"[ExoticGarden Legacy] Updated Effect.STEP_SOUND: "
+            f"{occurrences} occurrence(s) in {changed} file(s)"
+        )
+
+    return occurrences
+
+
+def modernize_main_plugin() -> None:
+    if not MAIN.is_file():
+        fail(f"Main plugin source not found: {relative(MAIN)}")
+
     text = read(MAIN)
+    original = text
 
-    # This fork targets Paper directly, so the old "suggest Paper" call is unnecessary.
-    text = replace_known(
-        text,
+    # This fork targets Paper directly. The inherited PaperLib suggestion call
+    # is no longer useful and needlessly couples startup to an old helper.
+    text = text.replace(
         "import io.github.thebusybiscuit.slimefun4.libraries.paperlib.PaperLib;\n",
         "",
-        1,
-        "unused PaperLib import in ExoticGarden.java",
     )
-    text = replace_known(
-        text,
-        "        PaperLib.suggestPaper(this);\n\n",
+    text = text.replace("        PaperLib.suggestPaper(this);\n\n", "")
+
+    # Never allow ExoticGarden Legacy to update itself back to an abandoned
+    # upstream build.
+    text = text.replace(
+        "import io.github.thebusybiscuit.slimefun4.libraries.dough.updater.GitHubBuildsUpdater;\n",
         "",
-        1,
-        "PaperLib.suggestPaper call",
     )
 
-    # Never let the Legacy fork auto-update itself back to the abandoned upstream project.
-    updater_import = "import io.github.thebusybiscuit.slimefun4.libraries.dough.updater.GitHubBuildsUpdater;\n"
-    if updater_import in text:
-        text = text.replace(updater_import, "")
-        print("[ExoticGarden Legacy] Removed legacy GitHubBuildsUpdater import")
-    elif "GitHubBuildsUpdater" not in text:
-        print("[ExoticGarden Legacy] OK updater import already removed")
+    updater_block = re.compile(
+        r"\n\s*// Auto Updater\s*\n"
+        r"\s*if\s*\(\s*cfg\.getBoolean\(\"options\.auto-update\"\)"
+        r".*?"
+        r"\n\s*\}\s*\n",
+        flags=re.DOTALL,
+    )
+    text, updater_count = updater_block.subn("\n", text, count=1)
+
+    # Point Slimefun's addon error reporting at the maintained fork.
+    text = text.replace(
+        'return "https://github.com/TheBusyBiscuit/ExoticGarden/issues";',
+        'return "https://github.com/wickidcow/SF_ExoticGarden/issues";',
+    )
+    text = text.replace(
+        'return "https://github.com/Slimefun-Addon-Community/ExoticGarden/issues";',
+        'return "https://github.com/wickidcow/SF_ExoticGarden/issues";',
+    )
+
+    if text != original:
+        write(MAIN, text)
+        print(
+            "[ExoticGarden Legacy] Updated main plugin compatibility hooks: "
+            f"{relative(MAIN)}"
+        )
     else:
-        fail("Unexpected GitHubBuildsUpdater import layout")
-
-    updater_pattern = re.compile(
-        r'\n        // Auto Updater\n'
-        r'        if \(cfg\.getBoolean\("options\.auto-update"\) && '
-        r'getDescription\(\)\.getVersion\(\)\.startsWith\("DEV - "\)\) \{\n'
-        r'            new GitHubBuildsUpdater\(this, getFile\(\), '
-        r'"TheBusyBiscuit/ExoticGarden/master"\)\.start\(\);\n'
-        r'        \}\n'
-    )
-    if updater_pattern.search(text):
-        text = updater_pattern.sub("\n", text, count=1)
-        print("[ExoticGarden Legacy] Removed abandoned upstream auto-updater")
-    elif "options.auto-update" not in text and "GitHubBuildsUpdater" not in text:
-        print("[ExoticGarden Legacy] OK updater block already removed")
-    else:
-        fail("Legacy auto-updater block changed unexpectedly; refusing a blind edit")
-
-    # GRASS was renamed to SHORT_GRASS in modern Bukkit/Paper.
-    text = replace_known(
-        text,
-        "new ItemStack(Material.GRASS)",
-        "new ItemStack(Material.SHORT_GRASS)",
-        4,
-        "Material.GRASS recipe references",
-    )
-
-    # STEP_SOUND is deprecated for removal in 26.2. DESTROY_BLOCK takes BlockData.
-    text = replace_known(
-        text,
-        "Effect.STEP_SOUND, Material.OAK_LEAVES",
-        "Effect.DESTROY_BLOCK, Material.OAK_LEAVES.createBlockData()",
-        2,
-        "legacy block-break effects in ExoticGarden.java",
-    )
-
-    old_bug_url = 'return "https://github.com/TheBusyBiscuit/ExoticGarden/issues";'
-    new_bug_url = 'return "https://github.com/wickidcow/ExoticGardenLegacy/issues";'
-    text = replace_known(text, old_bug_url, new_bug_url, 1, "Legacy bug tracker URL")
-
-    write(MAIN, text)
+        print("[ExoticGarden Legacy] OK main plugin compatibility hooks already modern")
 
 
-def modernize_plants_listener() -> None:
-    text = read(PLANTS)
+def verify_java_tree() -> None:
+    """
+    Fail BEFORE Maven if a known Paper 26.2-incompatible API survived.
+    This is intentionally tree-wide so future inherited files cannot be missed.
+    """
+    forbidden_patterns = [
+        (
+            re.compile(r"\bMaterial\.GRASS\b"),
+            "Material.GRASS remains; Paper 26.2 uses Material.SHORT_GRASS",
+        ),
+        (
+            re.compile(r"\bParticle\.VILLAGER_ANGRY\b"),
+            "Particle.VILLAGER_ANGRY remains; use Particle.ANGRY_VILLAGER",
+        ),
+        (
+            re.compile(r"\bEffect\.STEP_SOUND\b"),
+            "Effect.STEP_SOUND remains; Paper 26.2 uses Effect.DESTROY_BLOCK",
+        ),
+        (
+            re.compile(r"\bGitHubBuildsUpdater\b"),
+            "Legacy upstream GitHubBuildsUpdater remains",
+        ),
+        (
+            re.compile(r"options\.auto-update"),
+            "Legacy upstream auto-update configuration hook remains",
+        ),
+        (
+            re.compile(r"TheBusyBiscuit/ExoticGarden/master"),
+            "Abandoned ExoticGarden upstream update target remains",
+        ),
+    ]
 
-    text = replace_known(
-        text,
-        "== Material.GRASS)",
-        "== Material.SHORT_GRASS)",
-        1,
-        "Material.GRASS harvest check",
-    )
+    problems: list[str] = []
 
-    text = replace_known(
-        text,
-        "Particle.VILLAGER_ANGRY",
-        "Particle.ANGRY_VILLAGER",
-        1,
-        "renamed angry-villager particle",
-    )
+    for path in java_files():
+        text = read(path)
 
-    text = replace_known(
-        text,
-        "Effect.STEP_SOUND, Material.OAK_LEAVES",
-        "Effect.DESTROY_BLOCK, Material.OAK_LEAVES.createBlockData()",
-        3,
-        "legacy block-break effects in PlantsListener.java",
-    )
-
-    write(PLANTS, text)
-
-
-def verify() -> None:
-    combined = read(MAIN) + "\n" + read(PLANTS)
-
-    forbidden = {
-        "Material.GRASS)": "removed Material.GRASS API",
-        "Particle.VILLAGER_ANGRY": "removed particle name",
-        "Effect.STEP_SOUND": "deprecated STEP_SOUND effect",
-        "GitHubBuildsUpdater": "abandoned upstream updater",
-        "options.auto-update": "removed updater configuration hook",
-        "TheBusyBiscuit/ExoticGarden/master": "abandoned upstream update target",
-    }
-
-    problems = []
-    for token, reason in forbidden.items():
-        if token in combined:
-            problems.append(f"{reason}: {token}")
+        for pattern, reason in forbidden_patterns:
+            for match in pattern.finditer(text):
+                line = text.count("\n", 0, match.start()) + 1
+                problems.append(f"{relative(path)}:{line}: {reason}")
 
     if problems:
-        fail("Foundation verification failed:\n  - " + "\n  - ".join(problems))
+        fail(
+            "Paper 26.2 compatibility verification failed:\n  - "
+            + "\n  - ".join(problems)
+        )
 
-    print("[ExoticGarden Legacy] Paper 26.2 source normalization verified.")
+    print(
+        f"[ExoticGarden Legacy] Verified {len(java_files())} Java source files: "
+        "no known Foundation 1.0 Paper 26.2 blockers remain."
+    )
+
+
+def verify_dependency_policy() -> None:
+    plugin_yml = ROOT / "src/main/resources/plugin.yml"
+
+    if not plugin_yml.is_file():
+        fail("src/main/resources/plugin.yml is missing")
+
+    text = read(plugin_yml)
+
+    declared_bad_dependencies = [
+        "\n  - GuizhanLibPlugin",
+        "\n- GuizhanLibPlugin",
+        "\n  - GuguSlimefunLib",
+        "\n- GuguSlimefunLib",
+    ]
+
+    for token in declared_bad_dependencies:
+        if token in text:
+            fail(
+                "Foundation dependency policy violation in plugin.yml: "
+                f"{token.strip()}"
+            )
+
+    print(
+        "[ExoticGarden Legacy] Dependency policy verified: "
+        "no GuizhanLibPlugin or GuguSlimefunLib hard dependency."
+    )
+
+
+def main() -> None:
+    print("[ExoticGarden Legacy] Preparing complete source tree for Paper 26.2...")
+
+    modernize_main_plugin()
+
+    replace_material_grass()
+
+    replace_all_java_literal(
+        "Particle.VILLAGER_ANGRY",
+        "Particle.ANGRY_VILLAGER",
+        "Particle.VILLAGER_ANGRY -> Particle.ANGRY_VILLAGER",
+    )
+
+    # Run this AFTER Material.GRASS conversion so GrassSeeds becomes
+    # Material.SHORT_GRASS.createBlockData() automatically.
+    replace_step_sound()
+
+    verify_java_tree()
+    verify_dependency_policy()
+
+    print("[ExoticGarden Legacy] Foundation 1.0 Paper 26.2 normalization complete.")
 
 
 if __name__ == "__main__":
-    modernize_main()
-    modernize_plants_listener()
-    verify()
+    main()
