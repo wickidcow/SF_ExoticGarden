@@ -1,4 +1,4 @@
-name: Build ExoticGarden Legacy
+name: Build ExoticGarden Legacy 1.1
 
 on:
   push:
@@ -18,9 +18,9 @@ concurrency:
 
 jobs:
   build:
-    name: Build ExoticGarden-Legacy-1.0.jar
+    name: Build ExoticGarden-Legacy-1.1.jar
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -33,31 +33,24 @@ jobs:
           java-version: '25'
           cache: maven
 
-      - name: Normalize complete source tree for Paper 26.2
-        run: python3 scripts/prepare_26_2_sources.py
+      - name: Prepare inherited source for Legacy 1.1
+        run: python3 scripts/prepare_legacy_1_1.py
 
-      - name: Verify known removed APIs are gone
-        shell: bash
-        run: |
-          set -euo pipefail
+      - name: Verify Legacy 1.1 compatibility contract
+        run: python3 scripts/verify_legacy_1_1.py
 
-          if grep -RInE \
-            '\bMaterial\.GRASS\b|Particle\.VILLAGER_ANGRY|Effect\.STEP_SOUND' \
-            src/main/java; then
-            echo "Known Paper 26.2-incompatible API remained after normalization."
-            exit 1
-          fi
-
-          echo "Paper 26.2 compatibility scan passed."
-
-      - name: Build ExoticGarden Legacy
+      - name: Build ExoticGarden Legacy 1.1
         run: mvn -B -ntp clean package
+
+      - name: Re-run static verification after build
+        run: python3 scripts/verify_legacy_1_1.py
 
       - name: Verify exact release JAR
         shell: bash
         run: |
           set -euo pipefail
-          JAR="target/ExoticGarden-Legacy-1.0.jar"
+
+          JAR="target/ExoticGarden-Legacy-1.1.jar"
 
           test -f "$JAR"
           test -s "$JAR"
@@ -65,16 +58,28 @@ jobs:
           echo "Built:"
           ls -lh "$JAR"
 
+          echo
           echo "SHA-256:"
           sha256sum "$JAR"
 
-          echo "Embedded plugin metadata:"
+          echo
+          echo "Embedded plugin.yml:"
           unzip -p "$JAR" plugin.yml
 
-      - name: Upload ExoticGarden-Legacy-1.0.jar
+          echo
+          echo "Checking that fork-specific libraries were not shaded..."
+          if jar tf "$JAR" | grep -Eq \
+            '^(net/guizhanss/|com/xzavier0722/mc/plugin/slimefun4/)'; then
+            echo "ERROR: Fork-specific compatibility classes were bundled."
+            exit 1
+          fi
+
+          echo "No Guizhan/Gugu implementation classes bundled."
+
+      - name: Upload ExoticGarden-Legacy-1.1.jar
         uses: actions/upload-artifact@v7
         with:
-          name: ExoticGarden-Legacy-1.0
-          path: target/ExoticGarden-Legacy-1.0.jar
+          name: ExoticGarden-Legacy-1.1
+          path: target/ExoticGarden-Legacy-1.1.jar
           if-no-files-found: error
           retention-days: 30
