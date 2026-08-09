@@ -1,9 +1,14 @@
+# ExoticGarden Legacy
+#
+# Existing worlds and Slimefun IDs are intentionally preserved.
+# This fork does not use an automatic self-updater.
+
 grass-drops: []
+
 world-blacklist:
-- world_nether
-- world_the_end
+  - world_nether
+  - world_the_end
+
 chances:
   TREE: 22
   BUSH: 16
-options:
-  auto-update: true

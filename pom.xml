@@ -1,63 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>io.github.thebusybiscuit</groupId>
-    <artifactId>ExoticGarden</artifactId>
-    <version>UNOFFICIAL</version>
+
+    <groupId>io.github.wickidcow</groupId>
+    <artifactId>ExoticGardenLegacy</artifactId>
+    <version>1.0</version>
+    <name>ExoticGarden-Legacy</name>
+    <description>Legacy-maintained ExoticGarden for modern Paper and Slimefun.</description>
+    <url>https://github.com/wickidcow/ExoticGardenLegacy</url>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>25</maven.compiler.release>
+
+        <!-- Paper 26.2 baseline used by ExoticGarden Legacy 1.0 -->
+        <paper.version>26.2.build.111-stable</paper.version>
+
+        <!-- Stable public Slimefun API baseline. Runtime target is Slimefun Legacy. -->
+        <slimefun.version>RC-37</slimefun.version>
+
+        <bstats.version>3.2.1</bstats.version>
     </properties>
 
     <repositories>
         <repository>
-            <id>paper-repo</id>
-            <url>https://repo.destroystokyo.com/repository/maven-public/</url>
+            <id>papermc</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
-        <repository>
-            <id>spigot-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
-        </repository>
+
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
-        <repository>
-            <id>bstats-repo</id>
-            <url>https://repo.codemc.org/repository/maven-public</url>
-        </repository>
     </repositories>
 
     <build>
-        <finalName>${project.name} v${project.version}</finalName>
+        <finalName>ExoticGarden-Legacy-1.0</finalName>
         <defaultGoal>clean package</defaultGoal>
-        <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
 
         <resources>
+            <!-- Filter plugin.yml so ${project.version} becomes 1.0 -->
             <resource>
-                <directory>${basedir}/src/main/resources</directory>
+                <directory>src/main/resources</directory>
                 <filtering>true</filtering>
                 <includes>
-                    <include>*</include>
+                    <include>plugin.yml</include>
+                    <include>config.yml</include>
                 </includes>
             </resource>
 
+            <!-- Schematics are binary and must never be filtered. -->
             <resource>
-                <directory>${basedir}</directory>
-                <includes>
-                    <include>LICENSE</include>
-                </includes>
-            </resource>
-
-            <resource>
-                <directory>${basedir}/src/main/resources</directory>
+                <directory>src/main/resources</directory>
                 <filtering>false</filtering>
                 <includes>
-                    <include>schematics/*</include>
+                    <include>schematics/**</include>
+                </includes>
+            </resource>
+
+            <resource>
+                <directory>.</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>LICENSE</include>
                 </includes>
             </resource>
         </resources>
@@ -65,30 +73,19 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
-
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.15.0</version>
                 <configuration>
-
-                    <!-- Shade dependencies into the output jar -->
-                    <relocations>
-                        <relocation>
-                            <pattern>org.bstats</pattern>
-                            <shadedPattern>io.github.thebusybiscuit.exoticgarden.bstats</shadedPattern>
-                        </relocation>
-                    </relocations>
-
-                    <!-- Exclude unneeded metadata files from shaded dependencies -->
-                    <filters>
-                        <filter>
-                            <artifact>*:*</artifact>
-                            <excludes>
-                                <exclude>META-INF/*</exclude>
-                            </excludes>
-                        </filter>
-                    </filters>
+                    <release>25</release>
+                    <encoding>UTF-8</encoding>
+                    <showWarnings>true</showWarnings>
                 </configuration>
+            </plugin>
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.2</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -97,24 +94,60 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <minimizeJar>false</minimizeJar>
+
+                    <!-- bStats is the only library intentionally bundled. -->
+                    <artifactSet>
+                        <includes>
+                            <include>org.bstats:bstats-base</include>
+                            <include>org.bstats:bstats-bukkit</include>
+                        </includes>
+                    </artifactSet>
+
+                    <relocations>
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <shadedPattern>io.github.thebusybiscuit.exoticgarden.bstats</shadedPattern>
+                        </relocation>
+                    </relocations>
+
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                </configuration>
             </plugin>
         </plugins>
     </build>
 
     <dependencies>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>1.16.5-R0.1-SNAPSHOT</version>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>${paper.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>com.github.slimefun</groupId>
+            <groupId>com.github.Slimefun</groupId>
             <artifactId>Slimefun4</artifactId>
-            <version>RC-27</version>
+            <version>${slimefun.version}</version>
             <scope>provided</scope>
             <exclusions>
+                <!-- Paper is our compile API. Do not allow an older Bukkit API
+                     to win dependency resolution through Slimefun. -->
+                <exclusion>
+                    <groupId>org.spigotmc</groupId>
+                    <artifactId>spigot-api</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>io.github.baked-libs</groupId>
                     <artifactId>dough-api</artifactId>
@@ -132,8 +165,7 @@
         <dependency>
             <groupId>org.bstats</groupId>
             <artifactId>bstats-bukkit</artifactId>
-            <version>2.2.1</version>
-            <scope>compile</scope>
+            <version>${bstats.version}</version>
         </dependency>
     </dependencies>
 </project>

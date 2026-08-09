@@ -1,0 +1,19 @@
+EXOTICGARDEN LEGACY 1.0 FOUNDATION — DROP-IN
+
+Repository:
+https://github.com/wickidcow/ExoticGardenLegacy
+
+1. Extract this ZIP.
+2. Copy every file/folder into the ROOT of your ExoticGardenLegacy repository.
+3. Replace the existing files when GitHub asks.
+4. Commit/push to master.
+5. Open GitHub Actions -> "Build ExoticGarden Legacy".
+6. The artifact will contain:
+   ExoticGarden-Legacy-1.0.jar
+
+IMPORTANT:
+The workflow runs scripts/prepare_26_2_sources.py in its checkout before Maven.
+You may also run that script once locally and commit the resulting Java source
+changes. It is idempotent and refuses to silently edit unexpected source layouts.
+
+No GuizhanLibPlugin or GuguSlimefunLib dependency is introduced.
