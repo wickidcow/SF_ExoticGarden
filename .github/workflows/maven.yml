@@ -14,13 +14,16 @@ on:
 permissions:
   contents: write
 
+env:
+  LEGACY_ARTIFACT_VERSION: "1.0.0"
+
 concurrency:
   group: exoticgarden-legacy-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
-    name: Build SF_ExoticGarden.jar
+    name: Build ExoticGarden Legacy JAR
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -78,20 +81,21 @@ jobs:
 
           echo "No Guizhan/Gugu implementation classes bundled."
 
-      - name: Stage SF_ExoticGarden.jar
+      - name: Stage versioned Legacy JAR
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp target/ExoticGarden-Legacy-1.1.jar dist/SF_ExoticGarden.jar
-          test -s dist/SF_ExoticGarden.jar
-          sha256sum dist/SF_ExoticGarden.jar
+          OUTPUT="dist/SF_ExoticGarden_Legacy_v${LEGACY_ARTIFACT_VERSION}.jar"
+          cp target/ExoticGarden-Legacy-1.1.jar "$OUTPUT"
+          test -s "$OUTPUT"
+          sha256sum "$OUTPUT"
 
-      - name: Upload SF_ExoticGarden.jar
+      - name: Upload direct versioned Legacy JAR
         uses: actions/upload-artifact@v7
         with:
-          name: SF_ExoticGarden
-          path: dist/SF_ExoticGarden.jar
+          path: dist/SF_ExoticGarden_Legacy_v${{ env.LEGACY_ARTIFACT_VERSION }}.jar
+          archive: false
           if-no-files-found: error
           retention-days: 30
 
@@ -102,7 +106,7 @@ jobs:
         shell: bash
         run: |
           TAG="$GITHUB_REF_NAME"
-          JAR="dist/SF_ExoticGarden.jar"
+          JAR="dist/SF_ExoticGarden_Legacy_v${LEGACY_ARTIFACT_VERSION}.jar"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$JAR" --clobber
           else
