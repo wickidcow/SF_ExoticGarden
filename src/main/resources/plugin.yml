@@ -3,9 +3,9 @@ version: ${project.version}
 author: TheBusyBiscuit
 contributors:
   - wickidcow
-description: ExoticGarden Legacy - classic ExoticGarden maintained for modern Paper and Slimefun-compatible runtimes
+description: ExoticGarden Legacy - classic ExoticGarden maintained for Minecraft 1.21.11 through 26.2 and Slimefun-compatible runtimes
 website: https://github.com/wickidcow/SF_ExoticGarden
-api-version: '26.2'
+api-version: '1.21.11'
 main: io.github.thebusybiscuit.exoticgarden.ExoticGarden
 
 # Compatibility rule:
