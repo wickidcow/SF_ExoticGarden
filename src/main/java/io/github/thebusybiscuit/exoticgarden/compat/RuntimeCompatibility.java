@@ -4,12 +4,16 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import org.bukkit.Bukkit;
+import org.bukkit.Effect;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
- * Runtime diagnostics which intentionally depend only on Bukkit's Plugin API.
+ * Runtime diagnostics and small Bukkit-version compatibility helpers.
  *
  * <p>ExoticGarden Legacy must not hard-link against Slimefun Legacy, United,
  * Gugu, GuizhanLib or any other fork-specific implementation class just to
@@ -22,6 +26,24 @@ public final class RuntimeCompatibility {
     private static volatile boolean logged;
 
     private RuntimeCompatibility() {
+    }
+
+    public static void playBlockBreakEffect(World world, Location location, Material material) {
+        Effect effect = resolveEffect("DESTROY_BLOCK", "STEP_SOUND");
+        Object data = "DESTROY_BLOCK".equals(effect.name())
+            ? material.createBlockData()
+            : material;
+
+        world.playEffect(location, effect, data);
+    }
+
+    private static Effect resolveEffect(String preferred, String fallback) {
+        try {
+            return Effect.valueOf(preferred);
+        }
+        catch (IllegalArgumentException ignored) {
+            return Effect.valueOf(fallback);
+        }
     }
 
     public static void logStartup(JavaPlugin addon, boolean enabled) {
