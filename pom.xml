@@ -7,24 +7,16 @@
 
     <groupId>io.github.wickidcow</groupId>
     <artifactId>ExoticGardenLegacy</artifactId>
-    <version>1.1</version>
+    <version>1.0.1</version>
     <name>ExoticGarden-Legacy</name>
-    <description>Legacy-maintained ExoticGarden for modern Paper and Slimefun-compatible runtimes.</description>
+    <description>Legacy-maintained ExoticGarden for Minecraft 1.21.11 through 26.2 and Slimefun-compatible runtimes.</description>
     <url>https://github.com/wickidcow/SF_ExoticGarden</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.release>25</maven.compiler.release>
-
-        <!-- Albion/Legacy production baseline. Keep this exact while Paper 26.2
-             remains the primary runtime target. -->
-        <paper.version>26.2.build.111-stable</paper.version>
-
-        <!-- Deliberately compile against the public Slimefun API baseline rather
-             than a Legacy/United/Gugu implementation artifact. This keeps one
-             JAR usable across API-compatible forks. -->
+        <maven.compiler.release>21</maven.compiler.release>
+        <paper.version>1.21.11-R0.1-SNAPSHOT</paper.version>
         <slimefun.version>RC-37</slimefun.version>
-
         <bstats.version>3.2.1</bstats.version>
     </properties>
 
@@ -33,7 +25,6 @@
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
-
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
@@ -41,9 +32,8 @@
     </repositories>
 
     <build>
-        <finalName>ExoticGarden-Legacy-1.1</finalName>
+        <finalName>ExoticGarden-Legacy-1.0.1</finalName>
         <defaultGoal>clean package</defaultGoal>
-
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -53,8 +43,6 @@
                     <include>config.yml</include>
                 </includes>
             </resource>
-
-            <!-- Binary schematic resources must never be Maven-filtered. -->
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>false</filtering>
@@ -62,7 +50,6 @@
                     <include>schematics/**</include>
                 </includes>
             </resource>
-
             <resource>
                 <directory>.</directory>
                 <filtering>false</filtering>
@@ -71,14 +58,13 @@
                 </includes>
             </resource>
         </resources>
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.15.0</version>
                 <configuration>
-                    <release>25</release>
+                    <release>${maven.compiler.release}</release>
                     <encoding>UTF-8</encoding>
                     <showWarnings>true</showWarnings>
                     <compilerArgs>
@@ -87,7 +73,6 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -95,31 +80,24 @@
                 <executions>
                     <execution>
                         <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
+                        <goals><goal>shade</goal></goals>
                     </execution>
                 </executions>
                 <configuration>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
                     <minimizeJar>false</minimizeJar>
-
-                    <!-- Slimefun and Paper are supplied by the server. Only bStats
-                         is intentionally bundled into this addon. -->
                     <artifactSet>
                         <includes>
                             <include>org.bstats:bstats-base</include>
                             <include>org.bstats:bstats-bukkit</include>
                         </includes>
                     </artifactSet>
-
                     <relocations>
                         <relocation>
                             <pattern>org.bstats</pattern>
                             <shadedPattern>io.github.thebusybiscuit.exoticgarden.bstats</shadedPattern>
                         </relocation>
                     </relocations>
-
                     <filters>
                         <filter>
                             <artifact>*:*</artifact>
@@ -142,15 +120,12 @@
             <version>${paper.version}</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>com.github.Slimefun</groupId>
             <artifactId>Slimefun4</artifactId>
             <version>${slimefun.version}</version>
             <scope>provided</scope>
             <exclusions>
-                <!-- Paper is the compile server API. Do not let an older Spigot
-                     API win dependency resolution through Slimefun. -->
                 <exclusion>
                     <groupId>org.spigotmc</groupId>
                     <artifactId>spigot-api</artifactId>
@@ -161,14 +136,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
             <version>3.0.2</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.bstats</groupId>
             <artifactId>bstats-bukkit</artifactId>
