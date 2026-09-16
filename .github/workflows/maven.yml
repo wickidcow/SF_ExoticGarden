@@ -1,4 +1,4 @@
-name: Build ExoticGarden Legacy 1.0.2
+name: Build ExoticGarden Legacy 1.0.3
 
 on:
   push:
@@ -12,8 +12,8 @@ permissions:
   contents: write
 
 env:
-  LEGACY_ARTIFACT_VERSION: "1.0.2"
-  OUTPUT_NAME: "SF_ExoticGarden1.0.2.jar"
+  LEGACY_ARTIFACT_VERSION: "1.0.3"
+  OUTPUT_NAME: "SF_ExoticGarden1.0.3.jar"
 
 concurrency:
   group: exoticgarden-legacy-${{ github.workflow }}-${{ github.ref }}
@@ -41,13 +41,18 @@ jobs:
           grep -Fq '<maven.compiler.release>21</maven.compiler.release>' pom.xml
           grep -Fq '<paper.version>1.21.11-R0.1-SNAPSHOT</paper.version>' pom.xml
           grep -Fq '<id>normalize-portable-source</id>' pom.xml
+          grep -Fq '<finalName>SF_ExoticGarden1.0.3</finalName>' pom.xml
           ! grep -Eq '^[[:space:]]*-[[:space:]]*(GuizhanLibPlugin|GuguSlimefunLib)[[:space:]]*$' src/main/resources/plugin.yml
       - name: Verify Paper 1.21.11 compile baseline from plain Maven lifecycle
         run: mvn -B -ntp clean test -Dpaper.version=1.21.11-R0.1-SNAPSHOT
-      - name: Restore inherited source before second compatibility build
+      - name: Restore inherited source before 26.2 compatibility build
         run: git checkout -- src/main/java
-      - name: Verify Paper 26.2 compile compatibility from plain Maven lifecycle
-        run: mvn -B -ntp clean test -Dpaper.version=26.2.build.111-stable
+      - name: Verify Paper 26.2 compile compatibility
+        run: mvn -B -ntp clean test "-Dpaper.version=[26.2.build,26.3)"
+      - name: Restore inherited source before 26.3 compatibility build
+        run: git checkout -- src/main/java
+      - name: Verify Paper 26.3 alpha compile compatibility
+        run: mvn -B -ntp clean test -Dpaper.version=26.3-rc-3.build.1-alpha
       - name: Restore inherited source before release build
         run: git checkout -- src/main/java
       - name: Build universal release JAR from 1.21.11 baseline
@@ -56,7 +61,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          JAR="target/ExoticGarden-Legacy-1.0.2.jar"
+          JAR="target/${OUTPUT_NAME}"
           test -s "$JAR"
           unzip -p "$JAR" plugin.yml | grep -Fq "api-version: '1.21.11'"
           javap -verbose -classpath "$JAR" io.github.thebusybiscuit.exoticgarden.ExoticGarden | grep -Fq 'major version: 65'
@@ -65,12 +70,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          JAR="target/ExoticGarden-Legacy-1.0.2.jar"
+          JAR="target/${OUTPUT_NAME}"
           cp "$JAR" "dist/${OUTPUT_NAME}"
           sha256sum "dist/${OUTPUT_NAME}"
       - name: Upload raw JAR artifact
         uses: actions/upload-artifact@v7
         with:
+          name: ${{ env.OUTPUT_NAME }}
           path: dist/${{ env.OUTPUT_NAME }}
           archive: false
           if-no-files-found: error
@@ -83,7 +89,7 @@ jobs:
           set -euo pipefail
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then TAG="$GITHUB_REF_NAME"; else TAG="v${LEGACY_ARTIFACT_VERSION}"; fi
           JAR="dist/${OUTPUT_NAME}"
-          NOTES="Universal compatibility release: makes source normalization part of the normal Maven lifecycle so direct builds work without a separate preparation step; verifies Paper 1.21.11 and Paper 26.2; emits Java 21 bytecode; and keeps ExoticGarden on the shared Slimefun4 API so Slimefun Legacy, Original-compatible, United-compatible, and Gugu-compatible runtimes can load it when they preserve that public API."
+          NOTES="ExoticGarden 1.0.3 adds Paper 26.3 alpha compile validation while preserving the Paper 1.21.11 Java 21 universal release baseline and Paper 26.2 production compatibility. Maven now emits ${OUTPUT_NAME} directly."
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$JAR" --clobber
           else
