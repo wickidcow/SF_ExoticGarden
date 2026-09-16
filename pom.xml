@@ -4,11 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>io.github.wickidcow</groupId>
-    <artifactId>ExoticGardenLegacy</artifactId>
+    <artifactId>ExoticGarden</artifactId>
     <version>1.0.3</version>
-    <name>ExoticGarden-Legacy</name>
+    <name>ExoticGarden</name>
     <description>Universal ExoticGarden maintenance fork for Minecraft 1.21.11 through 26.3 and compatible Slimefun4 runtimes.</description>
     <url>https://github.com/wickidcow/SF_ExoticGarden</url>
 
@@ -22,151 +21,50 @@
     </properties>
 
     <repositories>
-        <repository>
-            <id>papermc</id>
-            <url>https://repo.papermc.io/repository/maven-public/</url>
-        </repository>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
+        <repository><id>papermc</id><url>https://repo.papermc.io/repository/maven-public/</url></repository>
+        <repository><id>jitpack.io</id><url>https://jitpack.io</url></repository>
     </repositories>
 
     <build>
-        <finalName>SF_ExoticGarden1.0.3</finalName>
+        <finalName>SF_ExoticGarden${project.version}</finalName>
         <defaultGoal>clean package</defaultGoal>
         <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>plugin.yml</include>
-                    <include>config.yml</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <includes>
-                    <include>schematics/**</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>.</directory>
-                <filtering>false</filtering>
-                <includes>
-                    <include>LICENSE</include>
-                </includes>
-            </resource>
+            <resource><directory>src/main/resources</directory><filtering>true</filtering><includes><include>plugin.yml</include><include>config.yml</include></includes></resource>
+            <resource><directory>src/main/resources</directory><filtering>false</filtering><includes><include>schematics/**</include></includes></resource>
+            <resource><directory>.</directory><filtering>false</filtering><includes><include>LICENSE</include></includes></resource>
         </resources>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.6.2</version>
-                <executions>
-                    <execution>
-                        <id>normalize-portable-source</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>${python.command}</executable>
-                            <arguments>
-                                <argument>${project.basedir}/scripts/prepare_legacy_1_1.py</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
+                <groupId>org.codehaus.mojo</groupId><artifactId>exec-maven-plugin</artifactId><version>3.6.2</version>
+                <executions><execution><id>normalize-portable-source</id><phase>generate-sources</phase><goals><goal>exec</goal></goals><configuration><executable>${python.command}</executable><arguments><argument>${project.basedir}/scripts/prepare_legacy_1_1.py</argument></arguments></configuration></execution></executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.15.0</version>
-                <configuration>
-                    <release>${maven.compiler.release}</release>
-                    <encoding>UTF-8</encoding>
-                    <showWarnings>true</showWarnings>
-                    <compilerArgs>
-                        <arg>-Xlint:deprecation</arg>
-                        <arg>-Xlint:unchecked</arg>
-                    </compilerArgs>
-                </configuration>
+                <groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.15.0</version>
+                <configuration><release>${maven.compiler.release}</release><encoding>UTF-8</encoding><showWarnings>true</showWarnings><compilerArgs><arg>-Xlint:deprecation</arg><arg>-Xlint:unchecked</arg></compilerArgs></configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.2</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals><goal>shade</goal></goals>
-                    </execution>
-                </executions>
+                <groupId>org.apache.maven.plugins</groupId><artifactId>maven-shade-plugin</artifactId><version>3.6.2</version>
+                <executions><execution><phase>package</phase><goals><goal>shade</goal></goals></execution></executions>
                 <configuration>
-                    <createDependencyReducedPom>false</createDependencyReducedPom>
-                    <minimizeJar>false</minimizeJar>
-                    <artifactSet>
-                        <includes>
-                            <include>org.bstats:bstats-base</include>
-                            <include>org.bstats:bstats-bukkit</include>
-                        </includes>
-                    </artifactSet>
-                    <relocations>
-                        <relocation>
-                            <pattern>org.bstats</pattern>
-                            <shadedPattern>io.github.thebusybiscuit.exoticgarden.bstats</shadedPattern>
-                        </relocation>
-                    </relocations>
-                    <filters>
-                        <filter>
-                            <artifact>*:*</artifact>
-                            <excludes>
-                                <exclude>META-INF/*.SF</exclude>
-                                <exclude>META-INF/*.DSA</exclude>
-                                <exclude>META-INF/*.RSA</exclude>
-                            </excludes>
-                        </filter>
-                    </filters>
+                    <createDependencyReducedPom>false</createDependencyReducedPom><minimizeJar>false</minimizeJar>
+                    <artifactSet><includes><include>org.bstats:bstats-base</include><include>org.bstats:bstats-bukkit</include></includes></artifactSet>
+                    <relocations><relocation><pattern>org.bstats</pattern><shadedPattern>io.github.thebusybiscuit.exoticgarden.bstats</shadedPattern></relocation></relocations>
+                    <filters><filter><artifact>*:*</artifact><excludes><exclude>META-INF/*.SF</exclude><exclude>META-INF/*.DSA</exclude><exclude>META-INF/*.RSA</exclude></excludes></filter></filters>
                 </configuration>
             </plugin>
         </plugins>
     </build>
 
     <dependencies>
+        <dependency><groupId>io.papermc.paper</groupId><artifactId>paper-api</artifactId><version>${paper.version}</version><scope>provided</scope></dependency>
         <dependency>
-            <groupId>io.papermc.paper</groupId>
-            <artifactId>paper-api</artifactId>
-            <version>${paper.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.Slimefun</groupId>
-            <artifactId>Slimefun4</artifactId>
-            <version>${slimefun.version}</version>
-            <scope>provided</scope>
+            <groupId>com.github.Slimefun</groupId><artifactId>Slimefun4</artifactId><version>${slimefun.version}</version><scope>provided</scope>
             <exclusions>
-                <exclusion>
-                    <groupId>org.spigotmc</groupId>
-                    <artifactId>spigot-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.github.baked-libs</groupId>
-                    <artifactId>dough-api</artifactId>
-                </exclusion>
+                <exclusion><groupId>org.spigotmc</groupId><artifactId>spigot-api</artifactId></exclusion>
+                <exclusion><groupId>io.github.baked-libs</groupId><artifactId>dough-api</artifactId></exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <version>3.0.2</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.bstats</groupId>
-            <artifactId>bstats-bukkit</artifactId>
-            <version>${bstats.version}</version>
-        </dependency>
+        <dependency><groupId>com.google.code.findbugs</groupId><artifactId>jsr305</artifactId><version>3.0.2</version><scope>provided</scope></dependency>
+        <dependency><groupId>org.bstats</groupId><artifactId>bstats-bukkit</artifactId><version>${bstats.version}</version></dependency>
     </dependencies>
 </project>
