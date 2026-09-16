@@ -7,9 +7,9 @@
 
     <groupId>io.github.wickidcow</groupId>
     <artifactId>ExoticGardenLegacy</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <name>ExoticGarden-Legacy</name>
-    <description>Universal ExoticGarden maintenance fork for Minecraft 1.21.11 through 26.2 and compatible Slimefun4 runtimes.</description>
+    <description>Universal ExoticGarden maintenance fork for Minecraft 1.21.11 through 26.3 and compatible Slimefun4 runtimes.</description>
     <url>https://github.com/wickidcow/SF_ExoticGarden</url>
 
     <properties>
@@ -33,7 +33,7 @@
     </repositories>
 
     <build>
-        <finalName>ExoticGarden-Legacy-1.0.2</finalName>
+        <finalName>SF_ExoticGarden1.0.3</finalName>
         <defaultGoal>clean package</defaultGoal>
         <resources>
             <resource>
