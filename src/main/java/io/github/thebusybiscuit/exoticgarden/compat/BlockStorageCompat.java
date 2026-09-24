@@ -1,6 +1,5 @@
 package io.github.thebusybiscuit.exoticgarden.compat;
 
-import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
@@ -19,26 +18,26 @@ public final class BlockStorageCompat {
     private BlockStorageCompat() {
     }
 
-    private static SlimefunBlockData getBlockData(Location location) {
-        if (location == null) {
-            return null;
-        }
-
-        var controller = Slimefun.getDatabaseManager().getBlockDataController();
-        SlimefunBlockData data = controller.getBlockData(location);
-        if (data != null && !data.isDataLoaded()) {
-            controller.loadBlockData(data);
-        }
-        return data;
-    }
-
     public static SlimefunItem check(Block block) {
         return block == null ? null : check(block.getLocation());
     }
 
     public static SlimefunItem check(Location location) {
-        SlimefunBlockData data = getBlockData(location);
-        return data == null ? null : SlimefunItem.getById(data.getSfId());
+        if (location == null) {
+            return null;
+        }
+
+        var controller = Slimefun.getDatabaseManager().getBlockDataController();
+        var data = controller.getBlockData(location);
+        if (data == null) {
+            return null;
+        }
+
+        if (!data.isDataLoaded()) {
+            controller.loadBlockData(data);
+        }
+
+        return SlimefunItem.getById(data.getSfId());
     }
 
     public static String checkId(Block block) {
