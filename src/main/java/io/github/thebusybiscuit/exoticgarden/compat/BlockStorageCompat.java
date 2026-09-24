@@ -1,31 +1,44 @@
 package io.github.thebusybiscuit.exoticgarden.compat;
 
+import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
-import me.mrCookieSlime.Slimefun.api.BlockStorage;
+import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 
 /**
- * Small compatibility boundary around the legacy BlockStorage API.
+ * Compatibility boundary around Slimefun's current block-data controller.
  *
- * <p>RC-37, Slimefun Legacy and the major continuation forks retain this API
- * surface for addon/save compatibility. Keeping direct storage calls in one
- * class makes future storage migrations local instead of scattering
- * fork-specific calls through ExoticGarden gameplay code.</p>
+ * <p>All synchronous reads explicitly load block data before accessing it so
+ * legacy ExoticGarden harvest/tree behavior remains unchanged.</p>
  */
 public final class BlockStorageCompat {
 
     private BlockStorageCompat() {
     }
 
+    private static SlimefunBlockData getBlockData(Location location) {
+        if (location == null) {
+            return null;
+        }
+
+        var controller = Slimefun.getDatabaseManager().getBlockDataController();
+        SlimefunBlockData data = controller.getBlockData(location);
+        if (data != null && !data.isDataLoaded()) {
+            controller.loadBlockData(data);
+        }
+        return data;
+    }
+
     public static SlimefunItem check(Block block) {
-        return block == null ? null : BlockStorage.check(block);
+        return block == null ? null : check(block.getLocation());
     }
 
     public static SlimefunItem check(Location location) {
-        return location == null ? null : BlockStorage.check(location);
+        SlimefunBlockData data = getBlockData(location);
+        return data == null ? null : SlimefunItem.getById(data.getSfId());
     }
 
     public static String checkId(Block block) {
@@ -34,19 +47,40 @@ public final class BlockStorageCompat {
     }
 
     public static ItemStack retrieve(Block block) {
-        return block == null ? null : BlockStorage.retrieve(block);
+        if (block == null) {
+            return null;
+        }
+
+        SlimefunItem item = check(block);
+        if (item == null) {
+            return null;
+        }
+
+        clear(block.getLocation());
+        return item.getItem();
     }
 
     public static void store(Block block, ItemStack item) {
-        if (block != null && item != null) {
-            BlockStorage.store(block, item);
+        if (block == null || item == null) {
+            return;
+        }
+
+        SlimefunItem slimefunItem = SlimefunItem.getByItem(item);
+        if (slimefunItem != null) {
+            Slimefun.getDatabaseManager()
+                    .getBlockDataController()
+                    .createBlock(block.getLocation(), slimefunItem.getId());
         }
     }
 
     public static void clear(Location location) {
         if (location != null) {
-            BlockStorage.clearBlockInfo(location);
+            Slimefun.getDatabaseManager().getBlockDataController().removeBlock(location);
         }
+    }
+
+    public static void remove(Location location) {
+        clear(location);
     }
 
     public static void replace(Block block, ItemStack item) {
@@ -54,14 +88,10 @@ public final class BlockStorageCompat {
             return;
         }
 
-        Location location = block.getLocation();
-        BlockStorage.deleteLocationInfoUnsafely(location, false);
-        BlockStorage.store(block, item);
+        clear(block.getLocation());
+        store(block, item);
     }
 
-    /**
-     * Returns true only when the Slimefun block was registered by this addon.
-     */
     public static boolean isOwnedBy(Block block, SlimefunAddon addon) {
         SlimefunItem item = check(block);
 
