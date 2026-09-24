@@ -15,6 +15,7 @@ import org.bukkit.block.data.Rotatable;
 
 import io.github.thebusybiscuit.exoticgarden.ExoticGarden;
 import io.github.thebusybiscuit.exoticgarden.Tree;
+import io.github.thebusybiscuit.exoticgarden.compat.BlockStorageCompat;
 import io.github.thebusybiscuit.exoticgarden.schematics.org.jnbt.ByteArrayTag;
 import io.github.thebusybiscuit.exoticgarden.schematics.org.jnbt.CompoundTag;
 import io.github.thebusybiscuit.exoticgarden.schematics.org.jnbt.NBTInputStream;
@@ -23,7 +24,6 @@ import io.github.thebusybiscuit.exoticgarden.schematics.org.jnbt.Tag;
 import io.github.thebusybiscuit.slimefun4.utils.tags.SlimefunTag;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerHead;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerSkin;
-import me.mrCookieSlime.Slimefun.api.BlockStorage;
 
 /*
  *
@@ -136,7 +136,11 @@ public class Schematic {
                     Block block = new Location(loc.getWorld(), blockX, blockY, blockZ).getBlock();
                     Material blockType = block.getType();
                     
-                    if ((!blockType.isSolid() && !blockType.isInteractable() && !SlimefunTag.UNBREAKABLE_MATERIALS.isTagged(blockType)) || blockType == Material.AIR || blockType == Material.CAVE_AIR || org.bukkit.Tag.SAPLINGS.isTagged(blockType)) {
+                    if ((org.bukkit.Tag.REPLACEABLE_BY_TREES.isTagged(blockType)
+                            && !SlimefunTag.UNBREAKABLE_MATERIALS.isTagged(blockType))
+                            || blockType == Material.AIR
+                            || blockType == Material.CAVE_AIR
+                            || org.bukkit.Tag.SAPLINGS.isTagged(blockType)) {
                         Material material = parseId(blocks[index], blockData[index]);
 
                         if (material != null) {
@@ -146,7 +150,7 @@ public class Schematic {
 
                             if (org.bukkit.Tag.LEAVES.isTagged(material)) {
                                 if (ThreadLocalRandom.current().nextInt(100) < 25) {
-                                    BlockStorage.store(block, tree.getItem());
+                                    BlockStorageCompat.store(block, tree.getItem());
                                 }
                             }
                             else if (material == Material.PLAYER_HEAD) {
@@ -155,7 +159,7 @@ public class Schematic {
                                 block.setBlockData(s);
 
                                 PlayerHead.setSkin(block, PlayerSkin.fromHashCode(tree.getTexture()), true);
-                                BlockStorage.store(block, tree.getFruit());
+                                BlockStorageCompat.store(block, tree.getFruit());
                             }
                         }
                     }

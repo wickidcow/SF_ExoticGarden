@@ -28,10 +28,10 @@ import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerHead;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerSkin;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.updater.GitHubBuildsUpdater;
 import io.github.thebusybiscuit.slimefun4.libraries.paperlib.PaperLib;
-import me.mrCookieSlime.Slimefun.api.BlockStorage;
+import io.github.thebusybiscuit.exoticgarden.compat.BlockStorageCompat;
+import io.github.thebusybiscuit.exoticgarden.compat.RuntimeCompatibility;
 
 import org.bstats.bukkit.Metrics;
-import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -97,7 +97,7 @@ public class ExoticGarden extends JavaPlugin implements SlimefunAddon {
         new Metrics(this, 4575);
 
         // Auto Updater
-        if (cfg.getBoolean("options.auto-update") && getDescription().getVersion().startsWith("DEV - ")) {
+        if (cfg.getBoolean("options.auto-update") && getPluginMeta().getVersion().startsWith("DEV - ")) {
             new GitHubBuildsUpdater(this, getFile(), "TheBusyBiscuit/ExoticGarden/master").start();
         }
 
@@ -126,31 +126,31 @@ public class ExoticGarden extends JavaPlugin implements SlimefunAddon {
         new SlimefunItem(miscItemGroup, iceCube, RecipeType.GRIND_STONE, new ItemStack[] {new ItemStack(Material.ICE), null, null, null, null, null, null, null, null}, new SlimefunItemStack(iceCube, 4))
         .register(this);
 
-        registerBerry("Grape", ChatColor.RED, Color.RED, PlantType.BUSH, "6ee97649bd999955413fcbf0b269c91be4342b10d0755bad7a17e95fcefdab0");
-        registerBerry("Blueberry", ChatColor.BLUE, Color.BLUE, PlantType.BUSH, "a5a5c4a0a16dabc9b1ec72fc83e23ac15d0197de61b138babca7c8a29c820");
-        registerBerry("Elderberry", ChatColor.RED, Color.FUCHSIA, PlantType.BUSH, "1e4883a1e22c324e753151e2ac424c74f1cc646eec8ea0db3420f1dd1d8b");
-        registerBerry("Raspberry", ChatColor.LIGHT_PURPLE, Color.FUCHSIA, PlantType.BUSH, "8262c445bc2dd1c5bbc8b93f2482f9fdbef48a7245e1bdb361d4a568190d9b5");
-        registerBerry("Blackberry", ChatColor.DARK_GRAY, Color.GRAY, PlantType.BUSH, "2769f8b78c42e272a669d6e6d19ba8651b710ab76f6b46d909d6a3d482754");
-        registerBerry("Cranberry", ChatColor.RED, Color.FUCHSIA, PlantType.BUSH, "d5fe6c718fba719ff622237ed9ea6827d093effab814be2192e9643e3e3d7");
-        registerBerry("Cowberry", ChatColor.RED, Color.FUCHSIA, PlantType.BUSH, "a04e54bf255ab0b1c498ca3a0ceae5c7c45f18623a5a02f78a7912701a3249");
-        registerBerry("Strawberry", ChatColor.DARK_RED, Color.FUCHSIA, PlantType.FRUIT, "cbc826aaafb8dbf67881e68944414f13985064a3f8f044d8edfb4443e76ba");
+        registerBerry("Grape", "&c", Color.RED, PlantType.BUSH, "6ee97649bd999955413fcbf0b269c91be4342b10d0755bad7a17e95fcefdab0");
+        registerBerry("Blueberry", "&9", Color.BLUE, PlantType.BUSH, "a5a5c4a0a16dabc9b1ec72fc83e23ac15d0197de61b138babca7c8a29c820");
+        registerBerry("Elderberry", "&c", Color.FUCHSIA, PlantType.BUSH, "1e4883a1e22c324e753151e2ac424c74f1cc646eec8ea0db3420f1dd1d8b");
+        registerBerry("Raspberry", "&d", Color.FUCHSIA, PlantType.BUSH, "8262c445bc2dd1c5bbc8b93f2482f9fdbef48a7245e1bdb361d4a568190d9b5");
+        registerBerry("Blackberry", "&8", Color.GRAY, PlantType.BUSH, "2769f8b78c42e272a669d6e6d19ba8651b710ab76f6b46d909d6a3d482754");
+        registerBerry("Cranberry", "&c", Color.FUCHSIA, PlantType.BUSH, "d5fe6c718fba719ff622237ed9ea6827d093effab814be2192e9643e3e3d7");
+        registerBerry("Cowberry", "&c", Color.FUCHSIA, PlantType.BUSH, "a04e54bf255ab0b1c498ca3a0ceae5c7c45f18623a5a02f78a7912701a3249");
+        registerBerry("Strawberry", "&4", Color.FUCHSIA, PlantType.FRUIT, "cbc826aaafb8dbf67881e68944414f13985064a3f8f044d8edfb4443e76ba");
 
-        registerPlant("Tomato", ChatColor.DARK_RED, PlantType.FRUIT, "99172226d276070dc21b75ba25cc2aa5649da5cac745ba977695b59aebd");
-        registerPlant("Lettuce", ChatColor.DARK_GREEN, PlantType.FRUIT, "477dd842c975d8fb03b1add66db8377a18ba987052161f22591e6a4ede7f5");
-        registerPlant("Tea Leaf", ChatColor.GREEN, PlantType.DOUBLE_PLANT, "1514c8b461247ab17fe3606e6e2f4d363dccae9ed5bedd012b498d7ae8eb3");
-        registerPlant("Cabbage", ChatColor.DARK_GREEN, PlantType.FRUIT, "fcd6d67320c9131be85a164cd7c5fcf288f28c2816547db30a3187416bdc45b");
-        registerPlant("Sweet Potato", ChatColor.GOLD, PlantType.FRUIT, "3ff48578b6684e179944ab1bc75fec75f8fd592dfb456f6def76577101a66");
-        registerPlant("Mustard Seed", ChatColor.YELLOW, PlantType.FRUIT, "ed53a42495fa27fb925699bc3e5f2953cc2dc31d027d14fcf7b8c24b467121f");
-        registerPlant("Curry Leaf", ChatColor.DARK_GREEN, PlantType.DOUBLE_PLANT, "32af7fa8bdf3252f69863b204559d23bfc2b93d41437103437ab1935f323a31f");
-        registerPlant("Onion", ChatColor.RED, PlantType.FRUIT, "6ce036e327cb9d4d8fef36897a89624b5d9b18f705384ce0d7ed1e1fc7f56");
-        registerPlant("Garlic", ChatColor.RESET, PlantType.FRUIT, "3052d9c11848ebcc9f8340332577bf1d22b643c34c6aa91fe4c16d5a73f6d8");
-        registerPlant("Cilantro", ChatColor.GREEN, PlantType.DOUBLE_PLANT, "16149196f3a8d6d6f24e51b27e4cb71c6bab663449daffb7aa211bbe577242");
-        registerPlant("Black Pepper", ChatColor.DARK_GRAY, PlantType.DOUBLE_PLANT, "2342b9bf9f1f6295842b0efb591697b14451f803a165ae58d0dcebd98eacc");
+        registerPlant("Tomato", "&4", PlantType.FRUIT, "99172226d276070dc21b75ba25cc2aa5649da5cac745ba977695b59aebd");
+        registerPlant("Lettuce", "&2", PlantType.FRUIT, "477dd842c975d8fb03b1add66db8377a18ba987052161f22591e6a4ede7f5");
+        registerPlant("Tea Leaf", "&a", PlantType.DOUBLE_PLANT, "1514c8b461247ab17fe3606e6e2f4d363dccae9ed5bedd012b498d7ae8eb3");
+        registerPlant("Cabbage", "&2", PlantType.FRUIT, "fcd6d67320c9131be85a164cd7c5fcf288f28c2816547db30a3187416bdc45b");
+        registerPlant("Sweet Potato", "&6", PlantType.FRUIT, "3ff48578b6684e179944ab1bc75fec75f8fd592dfb456f6def76577101a66");
+        registerPlant("Mustard Seed", "&e", PlantType.FRUIT, "ed53a42495fa27fb925699bc3e5f2953cc2dc31d027d14fcf7b8c24b467121f");
+        registerPlant("Curry Leaf", "&2", PlantType.DOUBLE_PLANT, "32af7fa8bdf3252f69863b204559d23bfc2b93d41437103437ab1935f323a31f");
+        registerPlant("Onion", "&c", PlantType.FRUIT, "6ce036e327cb9d4d8fef36897a89624b5d9b18f705384ce0d7ed1e1fc7f56");
+        registerPlant("Garlic", "&r", PlantType.FRUIT, "3052d9c11848ebcc9f8340332577bf1d22b643c34c6aa91fe4c16d5a73f6d8");
+        registerPlant("Cilantro", "&a", PlantType.DOUBLE_PLANT, "16149196f3a8d6d6f24e51b27e4cb71c6bab663449daffb7aa211bbe577242");
+        registerPlant("Black Pepper", "&8", PlantType.DOUBLE_PLANT, "2342b9bf9f1f6295842b0efb591697b14451f803a165ae58d0dcebd98eacc");
 
-        registerPlant("Corn", ChatColor.GOLD, PlantType.DOUBLE_PLANT, "9bd3802e5fac03afab742b0f3cca41bcd4723bee911d23be29cffd5b965f1");
-        registerPlant("Pineapple", ChatColor.GOLD, PlantType.DOUBLE_PLANT, "d7eddd82e575dfd5b7579d89dcd2350c991f0483a7647cffd3d2c587f21");
+        registerPlant("Corn", "&6", PlantType.DOUBLE_PLANT, "9bd3802e5fac03afab742b0f3cca41bcd4723bee911d23be29cffd5b965f1");
+        registerPlant("Pineapple", "&6", PlantType.DOUBLE_PLANT, "d7eddd82e575dfd5b7579d89dcd2350c991f0483a7647cffd3d2c587f21");
 
-        registerPlant("Red Bell Pepper", ChatColor.RED, PlantType.DOUBLE_PLANT, "65f7810414a2cee2bc1de12ecef7a4c89fc9b38e9d0414a90991241a5863705f");
+        registerPlant("Red Bell Pepper", "&c", PlantType.DOUBLE_PLANT, "65f7810414a2cee2bc1de12ecef7a4c89fc9b38e9d0414a90991241a5863705f");
 
         registerTree("Oak Apple", "cbb311f3ba1c07c3d1147cd210d81fe11fd8ae9e3db212a0fa748946c3633", "&c", Color.FUCHSIA, "Oak Apple Juice", true, Material.DIRT, Material.GRASS_BLOCK);
         registerTree("Coconut", "6d27ded57b94cf715b048ef517ab3f85bef5a7be69f14b1573e14e7e42e2e8", "&6", Color.MAROON, "Coconut Milk", false, Material.SAND);
@@ -307,7 +307,7 @@ public class ExoticGarden extends JavaPlugin implements SlimefunAddon {
         }
     }
 
-    public void registerBerry(String name, ChatColor color, Color potionColor, PlantType type, String texture) {
+    public void registerBerry(String name, String color, Color potionColor, PlantType type, String texture) {
         String upperCase = name.toUpperCase(Locale.ROOT);
         Berry berry = new Berry(upperCase, type, texture);
         berries.add(berry);
@@ -335,7 +335,7 @@ public class ExoticGarden extends JavaPlugin implements SlimefunAddon {
         return item != null ? item.getItem() : null;
     }
 
-    public void registerPlant(String name, ChatColor color, PlantType type, String texture) {
+    public void registerPlant(String name, String color, PlantType type, String texture) {
         String upperCase = name.toUpperCase(Locale.ROOT);
         String enumStyle = upperCase.replace(' ', '_');
 
@@ -371,7 +371,7 @@ public class ExoticGarden extends JavaPlugin implements SlimefunAddon {
 
     @Nullable
     public static ItemStack harvestPlant(@Nonnull Block block) {
-        SlimefunItem item = BlockStorage.check(block);
+        SlimefunItem item = BlockStorageCompat.check(block);
 
         if (item == null) {
             return null;
@@ -390,18 +390,18 @@ public class ExoticGarden extends JavaPlugin implements SlimefunAddon {
                             plant = block.getRelative(BlockFace.DOWN);
                         }
 
-                        BlockStorage.deleteLocationInfoUnsafely(block.getLocation(), false);
-                        block.getWorld().playEffect(block.getLocation(), Effect.STEP_SOUND, Material.OAK_LEAVES);
+                        BlockStorageCompat.remove(block.getLocation());
+                        RuntimeCompatibility.playBlockBreakEffect(block.getWorld(), block.getLocation(), Material.OAK_LEAVES);
                         block.setType(Material.AIR);
 
                         plant.setType(Material.OAK_SAPLING);
-                        BlockStorage.deleteLocationInfoUnsafely(plant.getLocation(), false);
-                        BlockStorage.store(plant, getItem(berry.toBush()));
+                        BlockStorageCompat.remove(plant.getLocation());
+                        BlockStorageCompat.store(plant, getItem(berry.toBush()));
                         return berry.getItem().clone();
                     default:
                         block.setType(Material.OAK_SAPLING);
-                        BlockStorage.deleteLocationInfoUnsafely(block.getLocation(), false);
-                        BlockStorage.store(block, getItem(berry.toBush()));
+                        BlockStorageCompat.remove(block.getLocation());
+                        BlockStorageCompat.store(block, getItem(berry.toBush()));
                         return berry.getItem().clone();
                 }
             }
@@ -412,16 +412,16 @@ public class ExoticGarden extends JavaPlugin implements SlimefunAddon {
 
     public void harvestFruit(Block fruit) {
         Location loc = fruit.getLocation();
-        SlimefunItem check = BlockStorage.check(loc);
+        SlimefunItem check = BlockStorageCompat.check(loc);
 
         if (check == null) {
             return;
         }
 
         if (treeFruits.contains(check.getId())) {
-            BlockStorage.clearBlockInfo(loc);
+            BlockStorageCompat.clear(loc);
             ItemStack fruits = check.getItem().clone();
-            fruit.getWorld().playEffect(loc, Effect.STEP_SOUND, Material.OAK_LEAVES);
+            RuntimeCompatibility.playBlockBreakEffect(fruit.getWorld(), loc, Material.OAK_LEAVES);
             fruit.getWorld().dropItemNaturally(loc, fruits);
             fruit.setType(Material.AIR);
         }
