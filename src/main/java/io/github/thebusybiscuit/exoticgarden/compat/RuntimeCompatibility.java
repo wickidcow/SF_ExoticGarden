@@ -9,7 +9,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -61,13 +60,13 @@ public final class RuntimeCompatibility {
             return;
         }
 
-        PluginDescriptionFile description = slimefun.getDescription();
+        var metadata = slimefun.getPluginMeta();
 
         addon.getLogger().info(
             "[Compatibility] Slimefun runtime: "
-                + description.getName()
+                + metadata.getName()
                 + " "
-                + description.getVersion()
+                + metadata.getVersion()
                 + " | main="
                 + slimefun.getClass().getName()
         );
