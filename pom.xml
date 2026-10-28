@@ -39,7 +39,7 @@
                 <executions><execution><id>normalize-portable-source</id><phase>generate-sources</phase><goals><goal>exec</goal></goals><configuration><executable>${python.command}</executable><arguments><argument>${project.basedir}/scripts/prepare_legacy_1_1.py</argument></arguments></configuration></execution></executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.15.0</version>
+                <groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.16.0</version>
                 <configuration><release>${maven.compiler.release}</release><encoding>UTF-8</encoding><showWarnings>true</showWarnings><compilerArgs><arg>-Xlint:deprecation</arg><arg>-Xlint:unchecked</arg></compilerArgs></configuration>
             </plugin>
             <plugin>
